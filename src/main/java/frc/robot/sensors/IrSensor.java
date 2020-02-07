@@ -7,7 +7,7 @@
 
 /**
  * Code by Charlie Macdonald.
- * Last modified on Feb 5th, 2020.
+ * Last modified on Feb 6th, 2020.
  */
 
 package frc.robot.sensors;
@@ -28,29 +28,34 @@ public class IrSensor implements Sendable {
     private final AnalogInput m_irsensor;
 
     //Set the formula values to calculate IR sensor distance:
-        //Values for short range (5-30cm) sensor: 12.8528, -0.007545, -3.92, 35, 4.5.
-        //TODO: If a different IR sensor is used, these values will need to be updated. (Use a robot-specific config to set them?)
+        //Values for short range (Sharp GP2Y0A41SK0F) 4-30cm sensor: 12.8528, -0.007545, -3.92, 30, 4.5.
+        //Note: If a different IR sensor is used, these values will need to be updated.
     private final double irSlopeValue = 12.8528;
-    private final double irXValue = -0.007545;
+    private final double irXValue = 0.007545;
     private final double irConstant = -3.92;
-    private final double irMaxDistance = 35;
-    private final double irMinDistance = 4.5;
+    private final double irMaxDistanceCm = 30;
+    private final double irMinDistanceCm = 4.5;
   
     public double getDistance() {
         //Calculate distance (cm) from mV:
-        double currentDistance = ((1/(((m_filter.calculate(m_irsensor.getValue()))/1000 +irXValue)/irSlopeValue))+irConstant);
-        //Accurate within +/- 1.5cm when measuring from 5-20cm.
+        //Accurate to +/- 1.5cm when measuring within 5-20cm.
+        double currentDistanceCm = ((1/
+            (((m_filter.calculate(m_irsensor.getValue()))
+            /1000 - irXValue)
+            /irSlopeValue)
+            ) //Inverse is effectively calculated at this point.
+            +irConstant);
 
         //The following "if" statements fix the values outside the sensor's accurate measuring range.
-        if (currentDistance > irMaxDistance) {
-            currentDistance = 35; //set distance to a fixed value if it is above the max measuring range.
+        if (currentDistanceCm > irMaxDistanceCm) {
+            currentDistanceCm = 30; //set distance to a fixed value if it is above the max measuring range.
         }
-        if (currentDistance < irMinDistance) {
-            currentDistance = 0; //set distance to a fixed value if it is below the min measuring range.
-            //Warning: Distances under 2cm will still produce erroneous values.
+        if (currentDistanceCm < irMinDistanceCm) {
+            currentDistanceCm = 0; //set distance to a fixed value if it is below the min measuring range.
+            //Warning: Distances under 1cm will still produce erroneous values.
         }
 
-        return(currentDistance);
+        return(currentDistanceCm);
 
     }
 
